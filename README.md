@@ -34,3 +34,14 @@ RabbitMQ中，常用的交换器有4种：
 5. RabbitMQ从队列中删除相应已经被确认的消息；
 6. 关闭信道；
 7. 关闭连接；
+#### 关于信道（channel）的一些思考
+我们知道，无论生产者还是消费者，都需要和RabbitMQ Broker建立连接，这个连接就是一条TCP连接，也就是Connection。一旦TCP连接建立起来，客户端紧接着可以创建一个AMQP信道（Channel），每一个信道都会被指派一个唯一的ID。信道是建立在Connect上的虚拟连接，RabbitMQ处理每条AMQP指令都是通过信道完成的，我们完全可以直接使用Connection就能完成信道的工作，为什么还要引入信道呢？
+试想这样一个场景，一个应用程序需要很多歌消费者和生产者从RabbitMQ Broker消费和生产消息，那么必然需要建立很多个Connection，也就是许多个TCP连接。然而对于操作系统而言，建立和销毁TCP连接是非常昂贵的开销，如果遇到使用高峰，性能瓶颈也随时显现。RabbitMQ采用类似NIO的做法，选择了TCP连接复用，不仅可以减少性能开销，同时也便于管理。
+每个线程把持一个信道，所以信道复用了Connection的TCP连接。同时RabbitMQ可以确保每个线程的私密性，就像拥有独立的连接一样，当每个信道的流量不是很大时，复用单一的Connection可以在产生性能瓶颈的情况下有效的节省TCP连接资源。但是当信道本身的流量很大时，这时候多个信道复用一个Connection就会产生性能瓶颈，
+进而使整体的流量被限制了，此时就需要开辟多个Connection，将这些信道均摊到这些Connection中。
+信道在AMQP中是一个很重要的概念，大多数操作都是在信道这个层面上展开的，例如：channel.exchangeDeclare、channel.queueDeclare、channel.basicPublish、channel.basicConsum等。
+### 2.2.AMQP协议介绍
+* Module Layer:位于协议最高层，主要定义了一些客户端调用的命令，客户端可以利用这些命令实现自己的业务逻辑，例如Queue.Declare命令声明一个队列，Basic.Consum订阅消费一个队列中的消息。
+* Session Layer:位于中间层，主要负责将客户端的命令发送给服务器，再将服务端的应答返回给客户端，主要为客户端和服务器之间的通信提供可靠性同步机制和错误处理。
+* Transport Layer:位于最底层，主要传输一些二进制流数据，提供帧的处理、信道复用、错误检测和数据表示等。
+AMQP说到底还是一个通信协议，从low-level层面来说，它是一个应用层协议，用于填充TCP协议层的数据部分。而从high-level层面来说，AMQP是通过协议命令进行交互的，可以将其看作一系列结构化命令的集合，这里的命令代表一种操作。
