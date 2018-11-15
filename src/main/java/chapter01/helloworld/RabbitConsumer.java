@@ -1,6 +1,7 @@
-package chapter01.demo01;
+package chapter01.helloworld;
 
 import com.rabbitmq.client.*;
+import system.RabitMqEnum;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -11,18 +12,14 @@ import java.util.concurrent.TimeoutException;
  */
 public class RabbitConsumer {
     private static final String QUEUE_NAME = "zhx_queue";
-    private static final String IP_ADDRESS = "192.168.1.198";
-    private static final String USERNAME = "test";
-    private static final String PASSWORD = "test123";
-    private static final int PORT = 5672;
 
     public static void main(String[] args) {
         Address[] addresses = new Address[]{
-                new Address(IP_ADDRESS, PORT)
+                new Address(RabitMqEnum.IP_ADDRESS.getValue(), Integer.parseInt(RabitMqEnum.PORT.getValue()))
         };
         ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setUsername(USERNAME);
-        connectionFactory.setPassword(PASSWORD);
+        connectionFactory.setUsername(RabitMqEnum.USERNAME.getValue());
+        connectionFactory.setPassword(RabitMqEnum.PASSWORD.getValue());
 
         try {
             Connection connection = connectionFactory.newConnection(addresses);

@@ -1,9 +1,10 @@
-package chapter01.demo01;
+package chapter01.helloworld;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.MessageProperties;
+import system.RabitMqEnum;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
@@ -15,19 +16,16 @@ public class RabbitProducer {
     private static final String EXCHANGE_NAME = "zhx_exchange";
     private static final String ROUTING_KEY = "zhx_routing_key";
     private static final String QUEUE_NAME = "zhx_queue";
-    private static final String IP_ADDRESS = "192.168.1.198";
-    private static final String USERNAME = "test";
-    private static final String PASSWORD = "test123";
-    private static final int PORT = 5672;
 
     public static void main(String[] args) {
         try {
             //创建连接工厂
             ConnectionFactory connectionFactory = new ConnectionFactory();
-            connectionFactory.setHost(IP_ADDRESS);
-            connectionFactory.setPort(PORT);
-            connectionFactory.setUsername(USERNAME);
-            connectionFactory.setPassword(PASSWORD);
+            connectionFactory.setHost(RabitMqEnum.IP_ADDRESS.getValue());
+            connectionFactory.setPort(Integer.parseInt(RabitMqEnum.PORT.getValue()));
+            connectionFactory.setUsername(RabitMqEnum.USERNAME.getValue());
+            connectionFactory.setPassword(RabitMqEnum.PASSWORD.getValue());
+//            connectionFactory.setVirtualHost("/");
 
             //创建一个连接
             Connection connection = connectionFactory.newConnection();
